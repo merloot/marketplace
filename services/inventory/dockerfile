@@ -1,0 +1,25 @@
+FROM golang:1.26-alpine AS builder
+
+WORKDIR /build
+
+COPY go.work go.work.sum ./
+COPY pkg/postgres/go.mod pkg/postgres/go.sum ./pkg/postgres/
+COPY services/inventory/go.mod services/inventory/go.sum ./services/inventory/
+
+RUN go work sync
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/api ./services/inventory/cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/migrate ./services/inventory/cmd/migrate
+
+FROM alpine:3.20
+
+RUN apk add --no-cache ca-certificates tzdata
+
+WORKDIR /app
+
+COPY --from=builder /out/api /app/api
+COPY --from=builder /out/migrate /app/migrate
+
+ENTRYPOINT ["/app/api"]
