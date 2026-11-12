@@ -62,6 +62,48 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       DYNAMIC_CONFIG_ENABLED: "true"
 
+  catalog-migrate:
+    build:
+      context: .
+      dockerfile: services/catalog/Dockerfile
+    entrypoint: ["/app/migrate"]
+    command: ["up"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://user:password@postgres/marketplace?sslmode=disable&search_path=catalog
+    restart: "no"
+
+  catalog-api:
+    build:
+      context: .
+      dockerfile: services/catalog/Dockerfile
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/marketplace?sslmode=disable&search_path=catalog
+    ports:
+      - "8081:8081"
+    depends_on:
+      catalog-migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+
+  catalog-relay:
+    build:
+      context: .
+      dockerfile: services/catalog/Dockerfile
+    entrypoint: ["/app/relay"]
+    environment:
+      DATABASE_URL: postgres://user:password@postgres:5432/marketplace?sslmode=disable&search_path=catalog
+      KAFKA_BROKERS: kafka:9092
+      KAFKA_TOPIC: catalog.events
+
+    depends_on:
+      catalog-migrate:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
 volumes:
   pgdata:
   kafka-data:
