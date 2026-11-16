@@ -21,6 +21,15 @@ func NewProductStock(productID uuid.UUID, sku SKU) (*ProductStock, error) {
 	}, nil
 }
 
+func RehydrateProductStock(productID uuid.UUID, sku SKU, quantity int, reserved int) *ProductStock {
+	return &ProductStock{
+		productID: productID,
+		sku:       sku,
+		quantity:  quantity,
+		reserved:  reserved,
+	}
+}
+
 func (p *ProductStock) ProductID() uuid.UUID { return p.productID }
 func (p *ProductStock) SKU() SKU             { return p.sku }
 func (p *ProductStock) Quantity() int        { return p.quantity }
@@ -28,7 +37,7 @@ func (p *ProductStock) Reserved() int        { return p.reserved }
 
 func (p *ProductStock) Add(qty int) error {
 	if qty <= 0 {
-		return ErrNegativeQuantity
+		return ErrInvalidQuantity
 	}
 	p.quantity += qty
 	return nil
@@ -36,7 +45,7 @@ func (p *ProductStock) Add(qty int) error {
 
 func (p *ProductStock) Reserve(qty int) error {
 	if qty <= 0 {
-		return ErrNegativeQuantity
+		return ErrInvalidQuantity
 	}
 	if qty+p.reserved > p.quantity {
 		return ErrInsufficientStock

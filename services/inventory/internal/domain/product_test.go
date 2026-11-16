@@ -81,14 +81,14 @@ func TestProductStock_Add(t *testing.T) {
 	t.Run("negative quantity", func(t *testing.T) {
 		p, _ := domain.NewProductStock(validUUID, validSKU)
 		err := p.Add(-10)
-		assert.ErrorIs(t, err, domain.ErrNegativeQuantity)
+		assert.ErrorIs(t, err, domain.ErrInvalidQuantity)
 		assert.Equal(t, 0, p.Quantity())
 	})
 
 	t.Run("zero quantity", func(t *testing.T) {
 		p, _ := domain.NewProductStock(validUUID, validSKU)
 		err := p.Add(0)
-		assert.ErrorIs(t, err, domain.ErrNegativeQuantity)
+		assert.ErrorIs(t, err, domain.ErrInvalidQuantity)
 		assert.Equal(t, 0, p.Quantity())
 	})
 }
@@ -109,7 +109,7 @@ func TestProductStock_Reserve(t *testing.T) {
 		p, _ := domain.NewProductStock(validUUID, validSKU)
 		_ = p.Add(10)
 		err := p.Reserve(-10)
-		assert.ErrorIs(t, err, domain.ErrNegativeQuantity)
+		assert.ErrorIs(t, err, domain.ErrInvalidQuantity)
 		assert.Equal(t, 10, p.Quantity())
 		assert.Equal(t, 0, p.Reserved())
 	})
