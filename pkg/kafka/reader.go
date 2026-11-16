@@ -33,12 +33,37 @@ func NewReader(cfg ReaderConfig, log *slog.Logger) (*Reader, error) {
 	return &Reader{reader: r, log: log}, nil
 }
 
-func (r *Reader) FetchMessage(ctx context.Context) (kafka.Message, error) {
-	return r.reader.FetchMessage(ctx)
+func (r *Reader) FetchMessage(ctx context.Context) (Message, error) {
+	kafkaMsg, err := r.reader.FetchMessage(ctx)
+	if err != nil {
+		return Message{}, err
+	}
+	headers := make([]Header, 0, len(kafkaMsg.Headers))
+
+	for _, h := range kafkaMsg.Headers {
+		headers = append(headers, Header{Key: h.Key, Value: h.Value})
+	}
+	return Message{
+		Key:       kafkaMsg.Key,
+		Value:     kafkaMsg.Value,
+		Headers:   headers,
+		partition: kafkaMsg.Partition,
+		offset:    kafkaMsg.Offset,
+	}, nil
 }
 
-func (r *Reader) CommitMessages(ctx context.Context, msgs ...kafka.Message) error {
-	return r.reader.CommitMessages(ctx, msgs...)
+func (r *Reader) CommitMessages(ctx context.Context, msgs ...Message) error {
+	kafkaMsg := make([]kafka.Message, 0, len(msgs))
+	for _, m := range msgs {
+		kafkaMsg = append(kafkaMsg, kafka.Message{
+			Topic:     r.reader.Config().Topic,
+			Partition: m.partition,
+			Offset:    m.offset,
+			Key:       m.Key,
+			Value:     m.Value,
+		})
+	}
+	return r.reader.CommitMessages(ctx, kafkaMsg...)
 }
 
 func (r *Reader) Close() error {
