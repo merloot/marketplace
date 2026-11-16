@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/merloot/marketplace/pkg/kafka"
 	pgbase "github.com/merloot/marketplace/pkg/postgres"
 	"github.com/merloot/marketplace/services/catalog/internal/config"
 	"github.com/merloot/marketplace/services/catalog/internal/relay"
 	"github.com/merloot/marketplace/services/catalog/internal/storage/postgres"
-	"github.com/segmentio/kafka-go"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -48,12 +48,16 @@ func run(ctx context.Context, log *slog.Logger) error {
 	}
 	defer provider.Close()
 
-	writer := &kafka.Writer{
-		Addr:         kafka.TCP(cfg.Kafka.Brokers...),
-		Topic:        cfg.Kafka.Topic,
-		Balancer:     &kafka.LeastBytes{},
-		RequiredAcks: kafka.RequireOne,
-		Async:        false,
+	writerConfig := kafka.WriterConfig{
+		Brokers: cfg.Kafka.Brokers, 
+		Topic: cfg.Kafka.Topic,
+		RequiredAcks: 1,
+		Async: false,
+	}
+	writer, err := kafka.NewWriter(writerConfig, log)
+	if err != nil {
+		log.Error("failed to create kafka writer", "error", err.Error())
+		return err
 	}
 	defer writer.Close()
 
