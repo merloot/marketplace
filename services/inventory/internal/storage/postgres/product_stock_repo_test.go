@@ -210,7 +210,7 @@ func TestProductStockRepo_GetById(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("successful get", func(t *testing.T) {
-		stock, err := r.GetById(ctx, db.Executor(ctx), productID)
+		stock, err := r.GetById(ctx, productID)
 		assert.NoError(t, err)
 		assert.Equal(t, productID, stock.ProductID())
 		assert.Equal(t, "SKU-GET-1", stock.SKU().String())
@@ -219,7 +219,7 @@ func TestProductStockRepo_GetById(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := r.GetById(ctx, db.Executor(ctx), uuid.New())
+		_, err := r.GetById(ctx, uuid.New())
 		assert.ErrorIs(t, err, domain.ErrProductNotFound) // pgx.ErrNoRows
 	})
 }

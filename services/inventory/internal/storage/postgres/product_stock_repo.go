@@ -8,7 +8,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
-	"github.com/merloot/marketplace/pkg/postgres"
 	"github.com/merloot/marketplace/services/inventory/internal/domain"
 	"github.com/merloot/marketplace/services/inventory/internal/storage"
 )
@@ -38,11 +37,11 @@ func (r *ProductStockRepo) Save(ctx context.Context, productStock domain.Product
 	return err
 }
 
-func (r *ProductStockRepo) GetById(ctx context.Context, exec postgres.DBExecutor, id uuid.UUID) (domain.ProductStock, error) {
+func (r *ProductStockRepo) GetById(ctx context.Context, id uuid.UUID) (domain.ProductStock, error) {
 	var productID uuid.UUID
 	var sku string
 	var quantity, reserved int
-	row := exec.QueryRow(ctx, `
+	row := r.provider.Executor(ctx).QueryRow(ctx, `
 		SELECT 
 			product_id, 
 			sku, 
