@@ -35,8 +35,28 @@ func NewWriter(cfg WriterConfig, log *slog.Logger) (*Writer, error) {
 	return &Writer{writer: &w, log: log}, nil
 }
 
-func (w *Writer) WriteMessages(ctx context.Context, msgs ...kafka.Message) error {
-	if err := w.writer.WriteMessages(ctx, msgs...); err != nil {
+func toKafkaMessages(msg []Message) []kafka.Message {
+	kafkaMsgs := make([]kafka.Message, 0, len(msg))
+
+	for _, m := range msg {
+		kafkaHeaders := make([]kafka.Header, 0, len(m.Headers))
+
+		for _, h := range m.Headers {
+			kafkaHeaders = append(kafkaHeaders, kafka.Header{Key: h.Key, Value: h.Value})
+		}
+
+		kafkaMsgs = append(kafkaMsgs, kafka.Message{
+			Key:     m.Key,
+			Value:   m.Value,
+			Headers: kafkaHeaders,
+		})
+	}
+	return kafkaMsgs
+}
+
+func (w *Writer) WriteMessages(ctx context.Context, msgs ...Message) error {
+	kafkaMsgs := toKafkaMessages(msgs)
+	if err := w.writer.WriteMessages(ctx, kafkaMsgs...); err != nil {
 		w.log.Error("failed to write messages", "error", err)
 		return err
 	}
