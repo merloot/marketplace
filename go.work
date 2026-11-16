@@ -2,6 +2,7 @@ go 1.26.0
 
 use (
 	./pkg/events
+	./pkg/kafka
 	./pkg/postgres
 	./services/catalog
 	./services/inventory
