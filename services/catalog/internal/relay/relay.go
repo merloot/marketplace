@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/merloot/marketplace/pkg/kafka"
 	pgbase "github.com/merloot/marketplace/pkg/postgres"
 	"github.com/merloot/marketplace/services/catalog/internal/storage"
+	"github.com/segmentio/kafka-go"
 )
 
 type KafkaWriter interface {
