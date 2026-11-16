@@ -10,9 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/merloot/marketplace/pkg/kafka"
 	"github.com/merloot/marketplace/pkg/postgres"
 	"github.com/merloot/marketplace/services/catalog/internal/storage"
-	"github.com/segmentio/kafka-go"
 )
 
 type MockTransactionManager struct {
