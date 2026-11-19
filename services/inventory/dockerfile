@@ -12,6 +12,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/api ./services/inventory/cmd/api
 RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/migrate ./services/inventory/cmd/migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-s -w" -o /out/consumer ./services/inventory/cmd/consumer
 
 FROM alpine:3.20
 
@@ -21,5 +22,6 @@ WORKDIR /app
 
 COPY --from=builder /out/api /app/api
 COPY --from=builder /out/migrate /app/migrate
+COPY --from=builder /out/consumer /app/consumer
 
 ENTRYPOINT ["/app/api"]
